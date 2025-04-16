@@ -5,7 +5,7 @@ import { z } from 'zod';
 import Markdown from 'react-markdown';
 import { useCallback, useState } from 'react';
 import axios from 'axios';
-import { Badge, Col, Collapse, Container, Row, Spinner, Table } from 'react-bootstrap';
+import { Badge, Button, Col, Collapse, Container, Row, Spinner, Table } from 'react-bootstrap';
 import { IPull } from '@/type';
 import { IFormState, ReportForm } from './components/form/report_form';
 import React from 'react';
@@ -28,7 +28,7 @@ enum Status {
 }
 
 export default function Page() {
-  const [status, setStatus] = useState<Status>(Status.Idle);
+  const [status, setStatus] = useState<Status>(Status.Error);
   const [pullRequest, setPullRequest] = useState<IPull[]>([]);
   const [openRows, setOpenRows] = useState<number[]>([]);
   const [formParams, setFormParams] = useState<IPullParams>({
@@ -44,6 +44,9 @@ export default function Page() {
     api: '/api/chat',
     onFinish: () => {
       setStatus(Status.Success);
+    },
+    onError: () => {
+      setStatus(Status.Error);
     },
     schema: z.object({
       summary: z.string(),
@@ -73,7 +76,7 @@ export default function Page() {
     getPulls();
   }
 
-  const handleRowClick = (id:number) => {
+  const handleRowClick = (id: number) => {
     setOpenRows(prevState =>
       prevState.includes(id) ? prevState.filter(rowId => rowId !== id) : [...prevState, id]
     );
@@ -200,13 +203,18 @@ export default function Page() {
 
   const renderError = () => {
     return (
-      <Row>
-        <Col>
-          <Markdown>
-            {`
-            ## Произошла ошибка
-            `}
-          </Markdown>
+      <Row className="d-flex align-items-center justify-content-center h-100">
+        <Col className="d-flex align-items-center justify-content-center">
+          <div className="text-center">
+            <h4>Произошла ошибка</h4>
+            <br />
+            <Button onClick={() => createReport({
+              url: formParams.url,
+              username: formParams.user,
+              startDate: formParams.start_date,
+              endDate: formParams.end_date,
+            })}>Повторить запрос</Button>
+          </div>
         </Col>
       </Row>
     );

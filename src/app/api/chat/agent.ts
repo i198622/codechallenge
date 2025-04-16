@@ -6,15 +6,15 @@ import { z } from 'zod';
 import { AgentPrompts } from './prompts';
 import { IPull, IReview } from '@/type';
 
-// const ollama = createOllama({
-//   baseURL: "http://10.50.29.102:11434/api/",
-// });
 const ollama = createOllama({
-  baseURL: "https://neuralhelper.ru/ollama/api/",
-  headers: {
-    Authorization: "Basic ZnJwc191c2VyOmVqcmozOHU5Mm5ram5iZitlb2RqXzNuMzlk",
-  },
+  baseURL: "http://10.50.29.102:11434/api/",
 });
+// const ollama = createOllama({
+//   baseURL: "https://neuralhelper.ru/ollama/api/",
+//   headers: {
+//     Authorization: "Basic ZnJwc191c2VyOmVqcmozOHU5Mm5ram5iZitlb2RqXzNuMzlk",
+//   },
+// });
 
 const model = ollama("qwen2.5-coder:32b");
 
@@ -116,9 +116,9 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
       model,
       system: AgentPrompts.systemCodeSecurity,
       schema: z.object({
-        grade: z.enum(['junior', 'junior+', 'middle', 'middle+', 'senior', 'senior+']),
-        score: z.number(),
-        summary: z.string(),
+        grade: z.enum(['junior', 'junior+', 'middle', 'middle+', 'senior', 'senior+']).describe('developer grade'),
+        score: z.number().describe('Review score'),
+        summary: z.string().describe('summary text'),
       }),
       prompt: `Review this pull request:
         Title: ${pullRequest.title}
