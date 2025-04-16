@@ -7,20 +7,15 @@
 
 ## MR body pull request content
 
-1.  **Code Diff:**
-    ```diff
-    {{ $('Loop Over Items').item.json.body.merge_requests.mr_diff }}
-    ```
-
-2.  **Expert Review Metrics:**
+1.  **Expert Review Metrics:**
     *   **Complexity:**
-        {{ $('think: complexity').all().toJsonString() }}
+        ${COMPLEXITY}
     *   **Code Style:**
-        {{ $('think: code_style').all().toJsonString() }}
+        ${CODE_STYLE}
     *   **Design Patterns:**
-        {{ $('think: design_patterns').all().toJsonString() }}
+        ${DESIGN_PATTERNS}
     *   **Anti-Patterns:**
-        {{ $('think: anti_patterns').all().toJsonString() }}
+        ${ANTI_PATTERNS}
 
 **Task:**
 

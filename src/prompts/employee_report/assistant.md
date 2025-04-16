@@ -65,5 +65,5 @@
 
 **Input JSON:**
 ```json
-{{ $json.data.toJsonString() }}
+  ${DATA}
 ```

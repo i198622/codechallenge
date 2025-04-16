@@ -5,18 +5,19 @@ import { createOllama } from 'ollama-ai-provider';
 import { z } from 'zod';
 import { IPull, IReview, IReviewResult } from '@/type';
 import { AgentPrompts } from '@/prompts/prompts';
+import { Log } from '@/utils/log';
 
 // const ollama = createOllama({
 //   baseURL: "http://10.50.31.20:11434/api/",
 // });
-const ollama = createOllama({
-  baseURL: "https://neuralhelper.ru/ollama/api/",
-  headers: {
-    Authorization: "Basic ZnJwc191c2VyOmVqcmozOHU5Mm5ram5iZitlb2RqXzNuMzlk",
-  },
-});
+// const ollama = createOllama({
+//   baseURL: "https://neuralhelper.ru/ollama/api/",
+//   headers: {
+//     Authorization: "Basic ZnJwc191c2VyOmVqcmozOHU5Mm5ram5iZitlb2RqXzNuMzlk",
+//   },
+// });
 
-const model = ollama("qwen2.5-coder:32b");
+// const model = ollama("qwen2.5-coder:32b");
 
 // const google = createGoogleGenerativeAI({
 //   // custom settings
@@ -25,11 +26,11 @@ const model = ollama("qwen2.5-coder:32b");
 
 // const model = google('gemini-2.5-pro-exp-03-25');
 
-// const openrouter = createOpenRouter({
-//   // apiKey: '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',
-//   apiKey: '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', // Vanya
-// });
-// const model = openrouter.chat('deepseek/deepseek-chat-v3-0324');
+const openrouter = createOpenRouter({
+  // apiKey: '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',
+  apiKey: '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', // Vanya
+});
+const model = openrouter.chat('google/gemini-2.5-pro-preview-03-25');
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const [antiPatternsReview, codeStyleReview, complexityReview, designPatternsReview] = await Promise.all([
@@ -123,28 +124,23 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
     }),
   ]);
 
-  // const reviews = [
-  //   { ...securityReview, type: 'security' },
-  //   { ...functionalityReview, type: 'performance' },
-  //   { ...maintainabilityReview.object, type: 'maintainability' },
-  // ];
+  const summaryPrompt = AgentPrompts.mrReport.prompt
+    .replace('${COMPLEXITY}', JSON.stringify(complexityReview.object))
+    .replace('${CODE_STYLE}', JSON.stringify(codeStyleReview.object))
+    .replace('${DESIGN_PATTERNS}', JSON.stringify(designPatternsReview.object))
+    .replace('${ANTI_PATTERNS}', JSON.stringify(antiPatternsReview.object));
 
-  // generateObject({
-    //   temperature: 0,
-    //   model,
-    //   system:
-    //     'You are an expert in code security. Focus on identifying security vulnerabilities, injection risks, and authentication issues.',
-    //   schema: z.object({
-    //     vulnerabilities: z.array(z.string()),
-    //     riskLevel: z.enum(['low', 'medium', 'high']),
-    //     suggestions: z.array(z.string()),
-    //   }),
-    //   prompt: `Review this code:
-    // ${code}`,
-    // }),
+  // PULL SUMMARY
+  const summary = await generateText({
+    temperature: 0,
+    model,
+    system: AgentPrompts.mrReport.system,
+    prompt: summaryPrompt,
+  });
 
   const review = {
     pull: pullRequest,
+    summary: summary.text,
     antiPatterns: antiPatternsReview.object,
     complexity: complexityReview.object,
     designPatterns: designPatternsReview.object,
@@ -162,18 +158,16 @@ export async function parallelCodeReview(pulls: IPull[]): Promise<IReviewResult>
     pullReviews.push(result);
   }
 
-  // const reviews = await processCodeReview(code);
+  const { text: summary } = await generateText({
+    temperature: 0,
+    model,
+    system: AgentPrompts.employeeRreport.system,
+    prompt: AgentPrompts.employeeRreport.prompt.replace('${DATA}', JSON.stringify(pullReviews)),
+  });
 
-  // Aggregate results using another model instance
-  // const { text: summary } = await generateText({
-  //   temperature: 0,
-  //   model,
-  //   system: 'You are a technical lead summarizing multiple code reviews.',
-  //   prompt: `Assess the level of a developer based on code reviews and rate their potential on a 10-point scale use Russian language
+  const result = { pullReviews , summary};
+  
+  Log(JSON.stringify(result));
 
-  //   ${reviews}
-  //   `,
-  // });
-
-  return { pullReviews };
+  return result;
 }
