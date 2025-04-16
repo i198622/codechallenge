@@ -171,7 +171,7 @@ export default function Page() {
         <Row>
           <Col className="mt-5">
             <h1>Отчет об оценке качества кода</h1>
-            <h5>Общая оценка качества кода(по десятибальной шкале): <Badge bg={gradeBGColor(5)}>8</Badge></h5>
+            <h5>Общая оценка качества кода(по десятибальной шкале): <Badge bg={gradeBGColor(8)}>8</Badge></h5>
             <h5>Общая оценка уровня: <Badge bg={gradeUserColor('middle')}>middle</Badge></h5>
             <hr />
             <dl className="row">

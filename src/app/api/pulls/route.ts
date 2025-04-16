@@ -47,8 +47,6 @@ export async function POST(request: Request) {
       };
     });
 
-  console.log(cache.get(cKey));
-  
   return new Response(JSON.stringify(foundItems), {
     status: 200,
     headers: { "Content-Type": "application/json" },

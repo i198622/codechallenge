@@ -3,8 +3,8 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateText, generateObject } from 'ai';
 import { createOllama } from 'ollama-ai-provider';
 import { z } from 'zod';
-import { AgentPrompts } from './prompts';
 import { IPull, IReview, IReviewResult } from '@/type';
+import { AgentPrompts } from '@/prompts/prompts';
 
 // const ollama = createOllama({
 //   baseURL: "http://10.50.31.20:11434/api/",
@@ -38,21 +38,26 @@ const model = ollama("qwen2.5-coder:32b");
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const [securityReview] = await Promise.all([
+    
+    // ANTI PATTERNS
     generateObject({
       temperature: 0,
       model,
-      system: AgentPrompts.systemCodeSecurity,
+      system: AgentPrompts.antiPatterns.system,
       schema: z.object({
-        grade: z.enum(['junior', 'junior+', 'middle', 'middle+', 'senior', 'senior+']).describe('developer grade'),
+        // grade: z.enum(['junior', 'junior+', 'middle', 'middle+', 'senior', 'senior+']).describe('Developer grade'),
         score: z.number().describe('Review score'),
-        summary: z.string().describe('summary text'),
+        summary: z.string().describe('Summary text'),
       }),
-      prompt: `Review this pull request:
-        Title: ${pullRequest.title}
-        Description: ${pullRequest.body}
-        Merged: ${pullRequest.is_merged}
-        Diff:
-        ${pullRequest.diff}
+      prompt: `
+        ${AgentPrompts.antiPatterns.prompt}
+
+        Review this pull request:
+          Title: ${pullRequest.title}
+          Description: ${pullRequest.body}
+          Merged: ${pullRequest.is_merged}
+          Diff:
+          ${pullRequest.diff}
       `,
     }),
   ]);

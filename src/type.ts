@@ -9,7 +9,8 @@ export interface IPull {
 export interface IReview {
   pull: IPull;
   security: {
-    grade: string;
+    // grade: string;
+    summary: string;
     score: number;
   };
 }
