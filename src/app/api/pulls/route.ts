@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     try {
       const result = await getPullRequests({ owner, repo, page: page });
       // Get all diffs
-      const diffResult = await Promise.all(
+      await Promise.all(
         result.data.map(async (p) => {
           const diffData = await getDiff(p.diff_url);
           cache.set(p.diff_url, diffData.data);
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
     .filter((e: IRepo) => dayjs(e.created_at).isBetween(start_date, end_date))
     .map((e: IRepo) => {
       return {
-        id: e.id,
+        id: e.number,
+        html_url: e.html_url,
         title: e.title,
         body: e.body_text,
         is_merged: e.merged_at != null,
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
       };
     });
 
+  console.log(cache.get(cKey));
+  
   return new Response(JSON.stringify(foundItems), {
     status: 200,
     headers: { "Content-Type": "application/json" },

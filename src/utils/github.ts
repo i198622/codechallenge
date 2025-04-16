@@ -28,3 +28,5 @@ export const getPullRequests = async ({owner, repo, page = 0}: IParams) => {
 export const getDiff = async (url: string) => {
   return axios.get(url);
 }
+
+export const between = (x: number, min: number, max: number): boolean => x >= min && x <= max;

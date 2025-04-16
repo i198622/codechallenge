@@ -4,17 +4,17 @@ import { generateText, generateObject } from 'ai';
 import { createOllama } from 'ollama-ai-provider';
 import { z } from 'zod';
 import { AgentPrompts } from './prompts';
-import { IPull, IReview } from '@/type';
+import { IPull, IReview, IReviewResult } from '@/type';
 
-const ollama = createOllama({
-  baseURL: "http://10.50.29.102:11434/api/",
-});
 // const ollama = createOllama({
-//   baseURL: "https://neuralhelper.ru/ollama/api/",
-//   headers: {
-//     Authorization: "Basic ZnJwc191c2VyOmVqcmozOHU5Mm5ram5iZitlb2RqXzNuMzlk",
-//   },
+//   baseURL: "http://10.50.31.20:11434/api/",
 // });
+const ollama = createOllama({
+  baseURL: "https://neuralhelper.ru/ollama/api/",
+  headers: {
+    Authorization: "Basic ZnJwc191c2VyOmVqcmozOHU5Mm5ram5iZitlb2RqXzNuMzlk",
+  },
+});
 
 const model = ollama("qwen2.5-coder:32b");
 
@@ -38,79 +38,6 @@ const model = ollama("qwen2.5-coder:32b");
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const [securityReview] = await Promise.all([
-    // generateText({
-    //   model,
-    //   maxTokens: 1000,
-    //   temperature: 0,
-    //   system: AgentPrompts.systemCodeSecurity,
-    //   prompt: `Review this pull request:
-      
-    //   ${code}
-    //   `
-    // }),
-
-    // generateText({
-    //   model,
-    //   maxTokens: 1000,
-    //   temperature: 0,
-    //   system: AgentPrompts.systemFunctionality,
-    //   prompt: `Review this pull request:
-      
-    //   ${code}
-    //   `
-    // }),
-
-    // generateText({
-    //   model,
-    //   maxTokens: 1000,
-    //   temperature: 0,
-    //   system: AgentPrompts.systemReadability,
-    //   prompt: `Review this pull request:
-      
-    //   ${code}
-    //   `
-    // })
-    // generateObject({
-    //   temperature: 0,
-    //   model,
-    //   system:
-    //     'You are an expert in code security. Focus on identifying security vulnerabilities, injection risks, and authentication issues.',
-    //   schema: z.object({
-    //     vulnerabilities: z.array(z.string()),
-    //     riskLevel: z.enum(['low', 'medium', 'high']),
-    //     suggestions: z.array(z.string()),
-    //   }),
-    //   prompt: `Review this code:
-    // ${code}`,
-    // }),
-
-    // generateObject({
-    //   temperature: 0,
-    //   model,
-    //   system:
-    //     'You are an expert in code performance. Focus on identifying performance bottlenecks, memory leaks, and optimization opportunities.',
-    //   schema: z.object({
-    //     issues: z.array(z.string()),
-    //     impact: z.enum(['low', 'medium', 'high']),
-    //     optimizations: z.array(z.string()),
-    //   }),
-    //   prompt: `Review this code:
-    // ${code}`,
-    // }),
-
-    // generateObject({
-    //   temperature: 0,
-    //   model,
-    //   system:
-    //     'You are an expert in code quality. Focus on code structure, readability, and adherence to best practices.',
-    //   schema: z.object({
-    //     concerns: z.array(z.string()),
-    //     qualityScore: z.number().min(1).max(10),
-    //     recommendations: z.array(z.string()),
-    //   }),
-    //   prompt: `Review this code:
-    // ${code}`,
-    // }),
     generateObject({
       temperature: 0,
       model,
@@ -151,14 +78,14 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
     // }),
 
   const review = {
+    pull: pullRequest,
     security: securityReview.object,
-    id: pullRequest.id
   };
 
   return review as IReview;
 }
 
-export async function parallelCodeReview(pulls: IPull[]) {
+export async function parallelCodeReview(pulls: IPull[]): Promise<IReviewResult> {
   const pullReviews = [];
 
   for (let pull of pulls) {

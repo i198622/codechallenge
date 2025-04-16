@@ -6,9 +6,10 @@ import Markdown from 'react-markdown';
 import { useCallback, useState } from 'react';
 import axios from 'axios';
 import { Badge, Button, Col, Collapse, Container, Row, Spinner, Table } from 'react-bootstrap';
-import { IPull } from '@/type';
+import { IPull, IReviewResult } from '@/type';
 import { IFormState, ReportForm } from './components/form/report_form';
 import React from 'react';
+import { between } from '@/utils/github';
 
 interface IPullParams {
   url: string;
@@ -28,7 +29,7 @@ enum Status {
 }
 
 export default function Page() {
-  const [status, setStatus] = useState<Status>(Status.Error);
+  const [status, setStatus] = useState<Status>(Status.Idle);
   const [pullRequest, setPullRequest] = useState<IPull[]>([]);
   const [openRows, setOpenRows] = useState<number[]>([]);
   const [formParams, setFormParams] = useState<IPullParams>({
@@ -40,7 +41,7 @@ export default function Page() {
     end_date: "2020-01-01",
   });
 
-  const { object, submit } = useObject({
+  const { object: reviewResult, submit } = useObject({
     api: '/api/chat',
     onFinish: () => {
       setStatus(Status.Success);
@@ -49,8 +50,17 @@ export default function Page() {
       setStatus(Status.Error);
     },
     schema: z.object({
-      summary: z.string(),
-    }),
+      pullReviews: z.array(z.object({
+        pull: z.object({
+          id: z.number(),
+          title: z.string(),
+          html_url: z.string(),
+          body: z.string(),
+          diff: z.string(),
+          is_merged: z.boolean(),
+        })
+      })),
+    }).required(),
   });
 
   const getPulls = useCallback(async () => {
@@ -132,12 +142,37 @@ export default function Page() {
   }
 
   const renderSuccess = () => {
+    const gradeBGColor = (value: number): string => {
+      if (between(value, 9, 10)) {
+        return 'primary';
+      }
+      if (between(value, 5, 9)) {
+        return 'warning';  
+      }
+      if (between(value, 3, 5)) {
+        return 'danger';  
+      }
+      return 'secondary';
+    };
+
+    const gradeUserColor = (value: string): string => {
+      if (value == 'senior' || value == 'senior+') {
+        return 'success';
+      }
+      if (value == 'middle' || value == 'middle+') {
+        return 'warning';
+      }
+      return 'secondary';
+    };
+
+
     return (
       <>
         <Row>
           <Col className="mt-5">
             <h1>Отчет об оценке качества кода</h1>
-            <h5>Общая оценка качества кода(по десятибальной шкале): 7</h5>
+            <h5>Общая оценка качества кода(по десятибальной шкале): <Badge bg={gradeBGColor(5)}>8</Badge></h5>
+            <h5>Общая оценка уровня: <Badge bg={gradeUserColor('middle')}>middle</Badge></h5>
             <hr />
             <dl className="row">
               <dt className="col-sm-3">Репозиторий</dt>
@@ -152,6 +187,10 @@ export default function Page() {
               <dd className="col-sm-9">
                 {pullRequest.length}
               </dd>
+              <dt className="col-sm-3">Даты проверки</dt>
+              <dd className="col-sm-9">
+                {formParams.start_date} / {formParams.end_date}
+              </dd>
             </dl>
             <hr />
             <Markdown>
@@ -160,8 +199,9 @@ export default function Page() {
             <hr />
           </Col>
         </Row>
-        <Row>
-          <Table hover size="sm" className='mt-5'>
+        <Row className='mt-5'>
+          <h5>Информация по pull requests</h5>
+          <Table hover size="sm" className='mt-2'>
             <thead>
               <tr>
                 <th>#</th>
@@ -171,21 +211,23 @@ export default function Page() {
               </tr>
             </thead>
             <tbody>
-              {pullRequest.map((p: IPull, index) => {
+              {reviewResult?.pullReviews?.map((p, index) => {
                 const isOpen = openRows.includes(index);
                 return (
-                  <React.Fragment key={p.id}>
-                    <tr key={p.id} onClick={() => handleRowClick(index)} role="button">
-                      <td>{p.id}</td>
-                      <td className="w-75">{p.title}</td>
-                      <td><Badge>1</Badge></td>
+                  <React.Fragment key={p?.pull!.id}>
+                    <tr onClick={() => handleRowClick(index)} role="button">
+                      <td>#{p?.pull!.id}</td>
+                      <td className="w-75">
+                        <a href={p?.pull!.html_url} target='_blank'>{p?.pull!.title}</a>
+                      </td>
+                      <td><Badge>2</Badge></td>
                       <td className='text-end'><Badge>Не сложно</Badge></td>
                     </tr>
                     <Collapse in={isOpen}>
                       <tr>
                         <td colSpan={4}>
                           <div className='bg-primary'>
-                            asdasd
+                            
                             <br />
                           </div>
                         </td>

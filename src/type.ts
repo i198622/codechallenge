@@ -1,4 +1,3 @@
-
 export interface IPull {
   id: number;
   title: string
@@ -8,9 +7,13 @@ export interface IPull {
 }
 
 export interface IReview {
-  id: number;
+  pull: IPull;
   security: {
     grade: string;
     score: number;
   };
+}
+
+export interface IReviewResult {
+  pullReviews: IReview[];
 }
