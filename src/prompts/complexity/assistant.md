@@ -4,7 +4,7 @@
 Analyze the provided git diff for a Merge Request (MR). Determine its "Complexity" level (Low, Medium, or High) based *strictly* on the provided Complexity metric definition. Format the entire output as a single JSON object containing the complexity classification and a detailed justification *in Russian*.
 
 ## Context: Complexity Metric Definition
-```
+
 **Metric: Complexity (MR Complexity)**
 
 **Description:**
@@ -49,6 +49,7 @@ The "Complexity" metric assesses the difficulty of the changes introduced within
 5.  Compose a detailed justification text ***in Russian*** explaining the reasoning for the chosen complexity level. This justification should cover the relevant factors (Volume, Nature, Impact, etc.) and justify the final classification based on the metric definition.
 6.  Construct a single JSON object as the *entire* output. Do not include any text before or after the JSON object.
 7.  The JSON object must strictly follow this structure:
+
     ```json
     {
       "justification": "[Place the detailed Russian justification text from step 5 here],

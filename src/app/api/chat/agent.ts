@@ -26,38 +26,99 @@ const model = ollama("qwen2.5-coder:32b");
 // const model = google('gemini-2.5-pro-exp-03-25');
 
 // const openrouter = createOpenRouter({
-//   apiKey: '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',
+//   // apiKey: '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',
+//   apiKey: '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', // Vanya
 // });
-// const model = openrouter.chat('google/gemini-2.5-pro-exp-03-25:free');
-
-
-// security
-// Functionality
-//  Readability and Maintainability
-
+// const model = openrouter.chat('deepseek/deepseek-chat-v3-0324');
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
-  const [securityReview] = await Promise.all([
-    
+  const [antiPatternsReview, codeStyleReview, complexityReview, designPatternsReview] = await Promise.all([
     // ANTI PATTERNS
     generateObject({
       temperature: 0,
       model,
       system: AgentPrompts.antiPatterns.system,
       schema: z.object({
-        // grade: z.enum(['junior', 'junior+', 'middle', 'middle+', 'senior', 'senior+']).describe('Developer grade'),
-        score: z.number().describe('Review score'),
-        summary: z.string().describe('Summary text'),
+        detailed_analysis: z.string(),
+        recommendations: z.array(z.string()),
+        confidence: z.enum(['Low', 'Medium', 'High']),
+        score: z.number(),
+        summary: z.string(),
       }),
       prompt: `
         ${AgentPrompts.antiPatterns.prompt}
-
         Review this pull request:
           Title: ${pullRequest.title}
           Description: ${pullRequest.body}
           Merged: ${pullRequest.is_merged}
           Diff:
           ${pullRequest.diff}
+      `,
+    }),
+
+    // CODE STYLE
+    generateObject({
+      temperature: 0,
+      model,
+      system: AgentPrompts.codeStyle.system,
+      schema: z.object({
+        detailed_analysis: z.string(),
+        recommendations: z.array(z.string()),
+        confidence: z.enum(['Low', 'Medium', 'High']),
+        score: z.number(),
+        summary: z.string(),
+      }),
+      prompt: `
+        ${AgentPrompts.codeStyle.prompt}
+        Review this pull request:
+          Title: ${pullRequest.title}
+          Description: ${pullRequest.body}
+          Merged: ${pullRequest.is_merged}
+          Diff:
+          ${pullRequest.diff}
+      `,
+    }),
+
+    // COMPLEXITY
+    generateObject({
+      temperature: 0,
+      model,
+      system: AgentPrompts.complexity.system,
+      schema: z.object({
+        justification: z.string(),
+        classification: z.enum(['Low', 'Medium', 'High']),
+      }),
+      prompt: `
+        ${AgentPrompts.complexity.prompt}
+        Review this pull request:
+          Title: ${pullRequest.title}
+          Description: ${pullRequest.body}
+          Merged: ${pullRequest.is_merged}
+          Diff:
+        ${pullRequest.diff}
+      `,
+    }),
+
+    // DESIGN PATTERNS
+    generateObject({
+      temperature: 0,
+      model,
+      system: AgentPrompts.designPatterns.system,
+      schema: z.object({
+        detailed_analysis: z.string(),
+        recommendations: z.array(z.string()),
+        confidence: z.enum(['Low', 'Medium', 'High']),
+        score: z.number(),
+        summary: z.string(),
+      }),
+      prompt: `
+        ${AgentPrompts.designPatterns.prompt}
+        Review this pull request:
+          Title: ${pullRequest.title}
+          Description: ${pullRequest.body}
+          Merged: ${pullRequest.is_merged}
+          Diff:
+        ${pullRequest.diff}
       `,
     }),
   ]);
@@ -84,10 +145,13 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
 
   const review = {
     pull: pullRequest,
-    security: securityReview.object,
+    antiPatterns: antiPatternsReview.object,
+    complexity: complexityReview.object,
+    designPatterns: designPatternsReview.object,
+    codeStyle: codeStyleReview.object,
   };
 
-  return review as IReview;
+  return review;
 }
 
 export async function parallelCodeReview(pulls: IPull[]): Promise<IReviewResult> {

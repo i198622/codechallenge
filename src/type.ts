@@ -6,13 +6,17 @@ export interface IPull {
   is_merged: boolean;
 }
 
+export interface IBaseReview {
+  detailed_analysis: string;
+  recommendations: string[]
+  confidence: string;
+  score: number;
+  summary: string;
+}
 export interface IReview {
   pull: IPull;
-  security: {
-    // grade: string;
-    summary: string;
-    score: number;
-  };
+  codeStyle: IBaseReview;
+  antiPatterns: IBaseReview;
 }
 
 export interface IReviewResult {
