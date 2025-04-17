@@ -34,7 +34,7 @@ const openrouter = createOpenRouter({
     "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", // Vanya
 });
 // const model = openrouter.chat("google/gemini-2.5-pro-preview-03-25");
-const model = openrouter.chat("openai/gpt-4.1");
+const model = openrouter.chat("google/gemini-2.0-flash-lite-001");
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const [
@@ -48,6 +48,9 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
       temperature: 0,
       model,
       system: AgentPrompts.antiPatterns.system,
+      experimental_telemetry: {
+        isEnabled: true,
+      },
       schema: z.object({
         detailed_analysis: z.string(),
         recommendations: z.array(z.string()),
@@ -71,6 +74,9 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
       temperature: 0,
       model,
       system: AgentPrompts.codeStyle.system,
+      experimental_telemetry: {
+        isEnabled: true,
+      },
       schema: z.object({
         detailed_analysis: z.string(),
         recommendations: z.array(z.string()),
@@ -94,6 +100,9 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
       temperature: 0,
       model,
       system: AgentPrompts.complexity.system,
+      experimental_telemetry: {
+        isEnabled: true,
+      },
       schema: z.object({
         justification: z.string(),
         classification: z.enum(["Low", "Medium", "High"]),
@@ -143,6 +152,9 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const summary = await generateText({
     temperature: 0,
     model,
+    experimental_telemetry: {
+      isEnabled: true,
+    },
     system: AgentPrompts.mrReport.system,
     prompt: summaryPrompt,
   });
@@ -185,6 +197,9 @@ export async function parallelCodeReview(
     temperature: 0,
     model,
     system: AgentPrompts.employeeRreport.systemMetricsSummary,
+    experimental_telemetry: {
+      isEnabled: true,
+    },
     schema: z.object({
       metricsSummary: z.object({
         complexity: z.object({
@@ -225,14 +240,10 @@ export async function parallelCodeReview(
   const aggrAntiPatterns = aggregateMetric(pullReviews, "antiPatterns");
   const aggrCodeStyle = aggregateMetric(pullReviews, "codeStyle");
   const aggrDesignPatterns = aggregateMetric(pullReviews, "designPatterns");
-  aggrAntiPatterns.details[0].score;
 
-  totalSummaryData.metricsSummary.antiPatterns["score"] =
-    aggrAntiPatterns.aggregatedScore;
-  totalSummaryData.metricsSummary.designPatterns["score"] =
-    aggrDesignPatterns.aggregatedScore;
-  totalSummaryData.metricsSummary.codeStyle["score"] =
-    aggrCodeStyle.aggregatedScore;
+  totalSummaryData.metricsSummary.antiPatterns["score"] = aggrAntiPatterns.aggregatedScore;
+  totalSummaryData.metricsSummary.designPatterns["score"] = aggrDesignPatterns.aggregatedScore;
+  totalSummaryData.metricsSummary.codeStyle["score"] = aggrCodeStyle.aggregatedScore;
   const totalScore =
     (aggrAntiPatterns.aggregatedScore +
       aggrDesignPatterns.aggregatedScore +

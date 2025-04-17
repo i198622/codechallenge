@@ -194,16 +194,17 @@ export default function Page() {
   const renderSuccess = () => {
     const getTotalScore = (): ReactNode => {
       const value = reviewResult?.totalScore!;
+      const valueFormatted = value.toPrecision(2);
       if (between(value, 9, 10)) {
-        return <Badge bg='primary'>{value}</Badge>
+        return <Badge bg='primary'>{valueFormatted}</Badge>
       }
       if (between(value, 5, 9)) {
-        return <Badge bg='warning'>{value}</Badge>
+        return <Badge bg='warning'>{valueFormatted}</Badge>
       }
       if (between(value, 3, 5)) {
-        return <Badge bg='danger'>{value}</Badge>
+        return <Badge bg='danger'>{valueFormatted}</Badge>
       }
-      return <Badge bg='secondary'>{value}</Badge>
+      return <Badge bg='secondary'>{valueFormatted}</Badge>
     };
 
     const gradeUserGrade = (): ReactNode => {
@@ -229,8 +230,8 @@ export default function Page() {
       return <Badge bg='secondary'>Low level</Badge>
     };
 
-    const gradeComplexity = (value: string): ReactNode => {
-      const v = value.toLocaleUpperCase();
+    const gradeComplexity = (v: string): ReactNode => {
+      const value = v.toLocaleUpperCase();
       if (value == 'high') {
         return (
           <Badge bg={'success'}>
