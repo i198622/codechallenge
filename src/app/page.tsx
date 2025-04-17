@@ -3,13 +3,14 @@
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { z } from 'zod';
 import Markdown from 'react-markdown';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Badge, Button, Col, Collapse, Container, Row, Spinner, Table } from 'react-bootstrap';
 import { IPull, IReviewResult } from '@/type';
 import { IFormState, ReportForm } from './components/form/report_form';
 import React from 'react';
 import { between } from '@/utils/github';
+import { ScorePieChart } from './components/charts/chart';
 
 interface IPullParams {
   url: string;
@@ -31,6 +32,7 @@ enum Status {
 export default function Page() {
   const [status, setStatus] = useState<Status>(Status.Idle);
   const [pullRequest, setPullRequest] = useState<IPull[]>([]);
+  const [chartData, setChartData] = useState<any>([["User rate", "scores in points"]]);
   const [openRows, setOpenRows] = useState<number[]>([]);
   const [formParams, setFormParams] = useState<IPullParams>({
     url: '',
@@ -50,7 +52,34 @@ export default function Page() {
       setStatus(Status.Error);
     },
     schema: z.object({
+      summary: z.string(),
       pullReviews: z.array(z.object({
+        summary: z.string(),
+        complexity: z.object({
+          classification: z.string(),
+          justification: z.string(),
+        }),
+        antiPatterns: z.object({
+          confidence: z.string(),
+          summary: z.string(),
+          detailed_analysis: z.string(),
+          score: z.number(),
+          recommendations: z.array(z.string()),
+        }),
+        codeStyle: z.object({
+          confidence: z.string(),
+          summary: z.string(),
+          detailed_analysis: z.string(),
+          score: z.number(),
+          recommendations: z.array(z.string()),
+        }),
+        designPatterns: z.object({
+          confidence: z.string(),
+          summary: z.string(),
+          detailed_analysis: z.string(),
+          score: z.number(),
+          recommendations: z.array(z.string()),
+        }),
         pull: z.object({
           id: z.number(),
           title: z.string(),
@@ -62,6 +91,37 @@ export default function Page() {
       })),
     }).required(),
   });
+
+  useEffect(() => {
+    if (reviewResult === undefined) {
+      return;
+    }
+    const data = getAveerageData();
+    const result = [
+      ['', ''],
+      ['Стиль кода', data!.codeStyle / pullRequest.length],
+      ['Анти паттерны', Math.abs((data!.antiPatterns / pullRequest.length) - 10)],
+      ['Дизайн паттерны', data!.designPatterns / pullRequest.length],
+    ];
+
+    setChartData(result);
+  }, [reviewResult])
+
+  const getAveerageData = () => {
+    
+    const data = {
+      codeStyle: 0,
+      designPatterns: 0,
+      antiPatterns: 0,
+    };
+
+    for (let item of reviewResult?.pullReviews!) {
+      data.codeStyle += item?.codeStyle?.score!;
+      data.antiPatterns += item?.antiPatterns?.score!;
+      data.designPatterns += item?.designPatterns?.score!;
+    }
+    return data;
+  };
 
   const getPulls = useCallback(async () => {
     setStatus(Status.LoadingPulls);
@@ -147,10 +207,10 @@ export default function Page() {
         return 'primary';
       }
       if (between(value, 5, 9)) {
-        return 'warning';  
+        return 'warning';
       }
       if (between(value, 3, 5)) {
-        return 'danger';  
+        return 'danger';
       }
       return 'secondary';
     };
@@ -165,6 +225,16 @@ export default function Page() {
       return 'secondary';
     };
 
+    const gradeComplexityColor = (value: string): string => {
+      const v = value.toLocaleUpperCase();
+      if (value == 'high') {
+        return 'success';
+      }
+      if (value == 'medium') {
+        return 'warning';
+      }
+      return 'secondary';
+    };
 
     return (
       <>
@@ -172,7 +242,17 @@ export default function Page() {
           <Col className="mt-5">
             <h1>Отчет об оценке качества кода</h1>
             <h5>Общая оценка качества кода(по десятибальной шкале): <Badge bg={gradeBGColor(8)}>8</Badge></h5>
-            <h5>Общая оценка уровня: <Badge bg={gradeUserColor('middle')}>middle</Badge></h5>
+            <Row>
+              <Col xs={10}>
+                <h5>
+                  Общая оценка уровня: <Badge bg={gradeUserColor('middle')}>middle</Badge>
+                </h5>
+              </Col>
+              <Col className='text-end'>
+                <a href='#' onClick={() => window.print()}>Распечатать</a>
+              </Col>
+            </Row>
+            
             <hr />
             <dl className="row">
               <dt className="col-sm-3">Репозиторий</dt>
@@ -193,13 +273,21 @@ export default function Page() {
               </dd>
             </dl>
             <hr />
+
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={8}>
             <Markdown>
-              {/* {mark} */}
+              {reviewResult?.summary!.replace('```markdown\n', '').replace('```', '')}
             </Markdown>
             <hr />
           </Col>
+          <Col xs={4}>
+            <ScorePieChart data={chartData} />
+          </Col>
         </Row>
-        <Row className='mt-5'>
+        <Row className='mt-5 mb-5'>
           <h5>Информация по pull requests</h5>
           <Table hover size="sm" className='mt-2'>
             <thead>
@@ -220,16 +308,15 @@ export default function Page() {
                       <td className="w-75">
                         <a href={p?.pull!.html_url} target='_blank'>{p?.pull!.title}</a>
                       </td>
-                      <td><Badge>2</Badge></td>
-                      <td className='text-end'><Badge>Не сложно</Badge></td>
+                      <td><Badge>{}</Badge></td>
+                      <td className='text-end'>
+                        <Badge bg={gradeComplexityColor(p?.complexity?.classification!)}>{p?.complexity?.classification}</Badge>
+                      </td>
                     </tr>
                     <Collapse in={isOpen}>
                       <tr>
                         <td colSpan={4}>
-                          <div className='bg-primary'>
-                            
-                            <br />
-                          </div>
+                          <Markdown>{p?.summary}</Markdown>
                         </td>
                       </tr>
                     </Collapse>
@@ -239,6 +326,8 @@ export default function Page() {
             </tbody>
           </Table>
         </Row>
+        <br />
+        <br />
       </>
     );
   };

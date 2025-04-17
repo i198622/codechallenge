@@ -17,18 +17,18 @@
 **Markdown Template for each MR section:**
 
 ```markdown
-# Отчет по Merge Request
+## Отчет по Merge Request
 
-## Общая информация
+#### Общая информация
 - **MR ID:** <mr_id>
 - **Сложность:** <output.complexity.classification>
 - **Классификация:** <output.complexity.classification>  *(Note: Template repeats this, using classification)*
 - **Обоснование:**
   <output.complexity.justification>
 
-## Метрики
+#### Метрики
 
-### Code Style
+##### Code Style
 - **Оценка:** <output.code_style.score>
 - **Резюме:**
   <output.code_style.summary>
@@ -38,7 +38,7 @@
   <List recommendations from output.code_style.recommendations here, formatted as a list>
 - **Уверенность:** <output.code_style.confidence>
 
-### Design Patterns
+##### Design Patterns
 - **Оценка:** <output.design_patterns.score>
 - **Резюме:**
   <output.design_patterns.summary>
@@ -48,7 +48,7 @@
   <List recommendations from output.design_patterns.recommendations here, formatted as a list>
 - **Уверенность:** <output.design_patterns.confidence>
 
-### Anti-Patterns
+##### Anti-Patterns
 - **Оценка:** <output.anti_patterns.score>
 - **Резюме:**
   <output.anti_patterns.summary>
@@ -58,9 +58,8 @@
   <List recommendations from output.anti_patterns.recommendations here, formatted as a list>
 - **Уверенность:** <output.anti_patterns.confidence>
 
-## Итоговый отчет MR
+#### Итоговый отчет MR
 <total_summary>
-
 ```
 
 **Input JSON:**
