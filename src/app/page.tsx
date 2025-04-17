@@ -35,6 +35,7 @@ export default function Page() {
   const [status, setStatus] = useState<Status>(Status.Idle);
   const [pullRequest, setPullRequest] = useState<IPull[]>([]);
   const [chartData, setChartData] = useState<any>([["User rate", "scores in points"]]);
+  const [chartDataComplexity, setChartDataComplexity] = useState<any>([["User rate", "scores in points"]]);
   const [activePR, setActiverPR] = useState<any>(null);
   const [formParams, setFormParams] = useState<IPullParams>({
     url: '',
@@ -105,31 +106,23 @@ export default function Page() {
     if (reviewResult === undefined) {
       return;
     }
-    const data = getAveerageData();
     const result = [
       ['', ''],
-      ['Стиль кода', data!.codeStyle / pullRequest.length],
-      ['Анти паттерны', Math.abs((data!.antiPatterns / pullRequest.length) - 10)],
-      ['Дизайн паттерны', data!.designPatterns / pullRequest.length],
+      ['Стиль кода', reviewResult.totalSummaryData?.metricsSummary?.codeStyle?.score],
+      ['Анти паттерны', Math.abs((reviewResult.totalSummaryData?.metricsSummary?.antiPatterns?.score! - 10))],
+      ['Дизайн паттерны', reviewResult.totalSummaryData?.metricsSummary?.designPatterns?.score!],
     ];
 
     setChartData(result);
+    const resultCount = [
+      ['', ''],
+      ['High', reviewResult.pullReviews?.filter((e) => e?.complexity?.classification?.toLocaleLowerCase() == 'high').length],
+      ['Medium', reviewResult.pullReviews?.filter((e) => e?.complexity?.classification?.toLocaleLowerCase() == 'medium').length],
+      ['Low', reviewResult.pullReviews?.filter((e) => e?.complexity?.classification?.toLocaleLowerCase() == 'low').length],
+    ];
+    setChartDataComplexity(resultCount);
+    console.log(resultCount);
   }, [reviewResult])
-
-  const getAveerageData = () => {
-    const data = {
-      codeStyle: 0,
-      designPatterns: 0,
-      antiPatterns: 0,
-    };
-
-    for (let item of reviewResult?.pullReviews!) {
-      data.codeStyle += item?.codeStyle?.score!;
-      data.antiPatterns += item?.antiPatterns?.score!;
-      data.designPatterns += item?.designPatterns?.score!;
-    }
-    return data;
-  };
 
   const getPulls = useCallback(async () => {
     setStatus(Status.LoadingPulls);
@@ -314,14 +307,14 @@ export default function Page() {
                 summary: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.summary!,
                 recommendations: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.recommendations!,
                 detailed_analysis: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.detailed_analysis!,
-                confidence: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.confidence!, 
+                confidence: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.confidence!,
               }}
               antiPatterns={{
                 score: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.score!,
                 summary: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.summary!,
                 recommendations: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.recommendations!,
                 detailed_analysis: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.detailed_analysis!,
-                confidence: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.confidence!, 
+                confidence: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.confidence!,
               }}
               totalSummary={{
                 overall_assessment: reviewResult?.totalSummary?.overall_assessment!,
@@ -331,7 +324,24 @@ export default function Page() {
             />
           </Col>
           <Col xs={4}>
-            <ScorePieChart data={chartData} />
+            <ScorePieChart
+              data={chartData}
+              options={{
+                legend: "none",
+                pieSliceText: "label",
+                title: "Средняя оценка по PR",
+                pieStartAngle: 10,
+              }}
+            />
+            <ScorePieChart
+              data={chartDataComplexity}
+              options={{
+                legend: "none",
+                pieSliceText: "label",
+                title: "Средняя сложность",
+                pieStartAngle: 10,
+              }}
+            />
           </Col>
         </Row>
         <Row className='mt-5'>

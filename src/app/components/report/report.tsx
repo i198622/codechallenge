@@ -1,4 +1,4 @@
-import { Card, Row } from "react-bootstrap";
+import { Badge, Card, Row } from "react-bootstrap";
 
 interface IProps {
   codeStyle: {
@@ -39,7 +39,7 @@ export function ReportContent({ codeStyle, designPatterns, antiPatterns, totalSu
       <dl className="row">
         <dt className="col-sm-3">Средняя оценка:</dt>
         <dd className="col-sm-9">
-          <p>{codeStyle.score}</p>
+          <p><Badge bg="primary">{codeStyle.score}</Badge></p>
         </dd>
 
         <dt className="col-sm-3">Уверенность:</dt>
@@ -75,7 +75,7 @@ export function ReportContent({ codeStyle, designPatterns, antiPatterns, totalSu
       <dl className="row">
         <dt className="col-sm-3">Средняя оценка:</dt>
         <dd className="col-sm-9">
-          <p>{designPatterns.score}</p>
+          <p><Badge bg="primary">{designPatterns.score}</Badge></p>
         </dd>
 
         <dt className="col-sm-3">Уверенность:</dt>
@@ -112,7 +112,7 @@ export function ReportContent({ codeStyle, designPatterns, antiPatterns, totalSu
       <dl className="row">
         <dt className="col-sm-3">Средняя оценка:</dt>
         <dd className="col-sm-9">
-          <p>{antiPatterns.score}</p>
+          <p><Badge bg="primary">{antiPatterns.score}</Badge></p>
         </dd>
 
         <dt className="col-sm-3">Уверенность:</dt>
