@@ -53,7 +53,41 @@ export default function Page() {
       setStatus(Status.Error);
     },
     schema: z.object({
-      summary: z.string(),
+      totalSummaryData: z.object({
+        metricsSummary: z.object({
+          antiPatterns: z.object({
+            confidence: z.string(),
+            summary: z.string(),
+            detailed_analysis: z.string(),
+            score: z.number(),
+            recommendations: z.array(z.string()),
+          }),
+          codeStyle: z.object({
+            confidence: z.string(),
+            summary: z.string(),
+            detailed_analysis: z.string(),
+            score: z.number(),
+            recommendations: z.array(z.string()),
+          }),
+          designPatterns: z.object({
+            confidence: z.string(),
+            summary: z.string(),
+            detailed_analysis: z.string(),
+            score: z.number(),
+            recommendations: z.array(z.string()),
+          }),
+          complexity: z.object({
+            classification: z.string(),
+            justification: z.string(),
+          }),
+        }),
+        totalSummary: z.string(),
+      }),
+      totalSummary: z.object({
+        overall_assessment: z.string(),
+        areas_for_improvement: z.array(z.string()), 
+        positives: z.array(z.string()), 
+      }),
       pullReviews: z.array(z.object({
         summary: z.string(),
         complexity: z.object({
@@ -286,7 +320,7 @@ export default function Page() {
         <Row>
           <Col xs={8}>
             <Markdown>
-              {reviewResult?.summary!.replace('```markdown\n', '').replace('```', '')}
+              {/* {reviewResult?.summary!.replace('```markdown\n', '').replace('```', '')} */}
             </Markdown>
             <hr />
           </Col>
@@ -324,6 +358,25 @@ export default function Page() {
                       <tr>
                         <td colSpan={4}>
                           <Markdown>{p?.summary}</Markdown>
+                          <br />
+                          <strong>Стиль кода</strong>
+                          <p>{p?.codeStyle?.summary}</p>
+                          <p>Рекомендации:</p>
+                          <ul>
+                            {p?.codeStyle?.recommendations?.map((e, index) => (<li key={`code_${index}`}>{e}</li>))}
+                          </ul>
+                          <strong>Дизайн паттерны</strong>
+                          <p>{p?.designPatterns?.summary}</p>
+                          <p>Рекомендации:</p>
+                          <ul>
+                            {p?.designPatterns?.recommendations?.map((e, index) => (<li key={index}>{e}</li>))}
+                          </ul>
+                          <strong>Анти паттерны</strong>
+                          <p>{p?.antiPatterns?.summary}</p>
+                          <p>Рекомендации:</p>
+                          <ul>
+                            {p?.antiPatterns?.recommendations?.map((e, index) => (<li key={index}>{e}</li>))}
+                          </ul>
                         </td>
                       </tr>
                     </Collapse>

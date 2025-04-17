@@ -29,5 +29,4 @@ export interface IReview {
 
 export interface IReviewResult {
   pullReviews: IReview[];
-  summary: string;
 }
