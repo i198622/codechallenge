@@ -17,7 +17,7 @@ export const getPullRequests = async ({owner, repo, page = 0}: IParams) => {
     owner: owner, //"jina-ai",
     repo: repo, //"serve",
     state: "all",
-    per_page: 50,
+    per_page: 100,
     page: page,
     headers: {
       accept: "application/vnd.github.full+json",

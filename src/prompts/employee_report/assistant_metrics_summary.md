@@ -20,3 +20,34 @@ ${METRIC_SUMMARY}
     *   **Aggregate Recommendations:** Combine unique and relevant recommendations from all input reviews into a single list of strings for the `recommendations` field in the output.
 4.  **Generate Total Summary:** Write a concise `totalSummary` *in Russian*. This summary should provide a high-level overview of the employee's performance based on the aggregated findings across all reviews.
 5.  **Format Output:** Structure the entire output *strictly* as a single JSON object adhering to the `Output JSON Schema`. Ensure all string values within the final JSON are in **Russian**.
+
+**Output JSON Schema:**
+```json
+{
+  "metricsSummary": {
+    "complexity": {
+      "classification": "<string: классификация суммарной сложности выполненных MR (например: 'Low' | 'Medium' | 'High')>",
+      "justification": "<string: обоснование суммарного анализа сложности изменений, основанное на анализе нескольких входящих объектов>"
+    },
+    "antiPatterns": {
+      "confidence": "<string: уровень доверия оценки (например: 'Low' | 'Medium' | 'High')>",
+      "detailed_analysis": "<string: подробный анализ изменений и их влияния на анти-паттерны из нескольких входящих объектов>",
+      "summary": "<string: краткий суммарный вывод по выявленным анти-паттернам>",
+      "recommendations": ["<list: общий список рекомендаций по разделу в виде списка строк>"]
+    },
+    "codeStyle": {
+      "confidence": "<string: уровень доверия оценки (например: 'Low' | 'Medium' | 'High')>",
+      "detailed_analysis": "<string: детальное описание анализа изменений в коде с точки зрения стиля, агрегированное из нескольких источников>",
+      "summary": "<string: краткий суммарный вывод о соответствии стиля оформлению>",
+      "recommendations": ["<list: общий список рекомендаций по разделу в виде списка строк>"]
+    },
+    "designPatterns": {
+      "confidence": "<string: уровень доверия оценки (например: 'Low' | 'Medium' | 'High')>",
+      "detailed_analysis": "<string: детальное описание анализа изменений с точки зрения проектных шаблонов, суммированное по всем входящим данным>",
+      "summary": "<string: краткий суммарный вывод по анализу использования проектных шаблонов>",
+      "recommendations": ["<list: общий список рекомендаций по разделу в виде списка строк>"]
+    }
+  },
+  "totalSummary": "<string: краткое общее резюме на русском языке>"
+}
+```

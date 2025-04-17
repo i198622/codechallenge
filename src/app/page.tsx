@@ -231,7 +231,7 @@ export default function Page() {
     };
 
     const gradeComplexity = (v: string): ReactNode => {
-      const value = v.toLocaleUpperCase();
+      const value = v.toLowerCase();
       if (value == 'high') {
         return (
           <Badge bg={'success'}>
