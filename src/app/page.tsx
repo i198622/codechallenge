@@ -3,10 +3,10 @@
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { z } from 'zod';
 import Markdown from 'react-markdown';
-import { useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Badge, Button, Col, Collapse, Container, Row, Spinner, Table } from 'react-bootstrap';
-import { IPull, IReviewResult } from '@/type';
+import { IPull } from '@/type';
 import { IFormState, ReportForm } from './components/form/report_form';
 import React from 'react';
 import { between } from '@/utils/github';
@@ -26,6 +26,7 @@ enum Status {
   LoadingPulls,
   LoadingReview,
   Success,
+  Empty,
   Error,
 }
 
@@ -108,7 +109,6 @@ export default function Page() {
   }, [reviewResult])
 
   const getAveerageData = () => {
-    
     const data = {
       codeStyle: 0,
       designPatterns: 0,
@@ -128,6 +128,10 @@ export default function Page() {
     const result = await axios.post('/api/pulls', formParams);
     setPullRequest(result.data);
     setStatus(Status.LoadingReview);
+    if (result.data.length == 0) {
+      setStatus(Status.Empty);
+      return;
+    }
     submit({ pulls: result.data });
   }, []);
 
@@ -154,16 +158,7 @@ export default function Page() {
 
   const renderIdle = () => {
     return (
-      <>
-        <ReportForm onSubmit={createReport} />
-        <button onClick={() => submit('Messages during finals week.')}>
-          Generate notifications
-        </button>
-
-        <button onClick={getPulls}>
-          Get Data
-        </button>
-      </>
+      <ReportForm onSubmit={createReport} />
     );
   };
 
@@ -225,15 +220,27 @@ export default function Page() {
       return 'secondary';
     };
 
-    const gradeComplexityColor = (value: string): string => {
+    const gradeComplexity = (value: string): ReactNode => {
       const v = value.toLocaleUpperCase();
       if (value == 'high') {
-        return 'success';
+        return (
+          <Badge bg={'success'}>
+            Высокая
+          </Badge>
+        );
       }
       if (value == 'medium') {
-        return 'warning';
+        return (
+          <Badge bg={'warning'}>
+            Средняя
+          </Badge>
+        );
       }
-      return 'secondary';
+      return (
+        <Badge bg={'secondary'}>
+          Легкая
+        </Badge>
+      );
     };
 
     return (
@@ -252,7 +259,7 @@ export default function Page() {
                 <a href='#' onClick={() => window.print()}>Распечатать</a>
               </Col>
             </Row>
-            
+
             <hr />
             <dl className="row">
               <dt className="col-sm-3">Репозиторий</dt>
@@ -308,9 +315,9 @@ export default function Page() {
                       <td className="w-75">
                         <a href={p?.pull!.html_url} target='_blank'>{p?.pull!.title}</a>
                       </td>
-                      <td><Badge>{}</Badge></td>
+                      <td><Badge>2</Badge></td>
                       <td className='text-end'>
-                        <Badge bg={gradeComplexityColor(p?.complexity?.classification!)}>{p?.complexity?.classification}</Badge>
+                        {gradeComplexity(p?.complexity?.classification!)}
                       </td>
                     </tr>
                     <Collapse in={isOpen}>
@@ -329,6 +336,18 @@ export default function Page() {
         <br />
         <br />
       </>
+    );
+  };
+
+  const renderEmpty = () => {
+    return (
+      <Row className="d-flex align-items-center justify-content-center h-100">
+        <Col className="d-flex align-items-center justify-content-center">
+          <div className="text-center">
+            <h4>Не найдены pull requests</h4>
+          </div>
+        </Col>
+      </Row>
     );
   };
 
@@ -361,6 +380,8 @@ export default function Page() {
         return renderSuccess();
       case Status.Error:
         return renderError();
+      case Status.Empty:
+        return renderEmpty();
       default:
         return renderIdle();
     }
