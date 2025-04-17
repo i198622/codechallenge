@@ -5,7 +5,7 @@ import { z } from 'zod';
 import Markdown from 'react-markdown';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import { Badge, Button, Col, Collapse, Container, Row, Spinner, Table } from 'react-bootstrap';
+import { Badge, Button, Col, Collapse, Container, Modal, Row, Spinner, Table } from 'react-bootstrap';
 import { IPull } from '@/type';
 import { IFormState, ReportForm } from './components/form/report_form';
 import React from 'react';
@@ -34,7 +34,7 @@ export default function Page() {
   const [status, setStatus] = useState<Status>(Status.Idle);
   const [pullRequest, setPullRequest] = useState<IPull[]>([]);
   const [chartData, setChartData] = useState<any>([["User rate", "scores in points"]]);
-  const [openRows, setOpenRows] = useState<number[]>([]);
+  const [activePR, setActiverPR] = useState<any>(null);
   const [formParams, setFormParams] = useState<IPullParams>({
     url: '',
     owner: "jina-ai",
@@ -42,6 +42,14 @@ export default function Page() {
     user: "JoanFM",
     start_date: "2025-08-01",
     end_date: "2020-01-01",
+  });
+
+  const baseObj = z.object({
+    confidence: z.string(),
+    summary: z.string(),
+    detailed_analysis: z.string(),
+    score: z.number(),
+    recommendations: z.array(z.string()),
   });
 
   const { object: reviewResult, submit } = useObject({
@@ -53,29 +61,12 @@ export default function Page() {
       setStatus(Status.Error);
     },
     schema: z.object({
+      totalScore: z.number(),
       totalSummaryData: z.object({
         metricsSummary: z.object({
-          antiPatterns: z.object({
-            confidence: z.string(),
-            summary: z.string(),
-            detailed_analysis: z.string(),
-            score: z.number(),
-            recommendations: z.array(z.string()),
-          }),
-          codeStyle: z.object({
-            confidence: z.string(),
-            summary: z.string(),
-            detailed_analysis: z.string(),
-            score: z.number(),
-            recommendations: z.array(z.string()),
-          }),
-          designPatterns: z.object({
-            confidence: z.string(),
-            summary: z.string(),
-            detailed_analysis: z.string(),
-            score: z.number(),
-            recommendations: z.array(z.string()),
-          }),
+          antiPatterns: baseObj,
+          codeStyle: baseObj,
+          designPatterns: baseObj,
           complexity: z.object({
             classification: z.string(),
             justification: z.string(),
@@ -85,8 +76,8 @@ export default function Page() {
       }),
       totalSummary: z.object({
         overall_assessment: z.string(),
-        areas_for_improvement: z.array(z.string()), 
-        positives: z.array(z.string()), 
+        areas_for_improvement: z.array(z.string()),
+        positives: z.array(z.string()),
       }),
       pullReviews: z.array(z.object({
         summary: z.string(),
@@ -94,27 +85,9 @@ export default function Page() {
           classification: z.string(),
           justification: z.string(),
         }),
-        antiPatterns: z.object({
-          confidence: z.string(),
-          summary: z.string(),
-          detailed_analysis: z.string(),
-          score: z.number(),
-          recommendations: z.array(z.string()),
-        }),
-        codeStyle: z.object({
-          confidence: z.string(),
-          summary: z.string(),
-          detailed_analysis: z.string(),
-          score: z.number(),
-          recommendations: z.array(z.string()),
-        }),
-        designPatterns: z.object({
-          confidence: z.string(),
-          summary: z.string(),
-          detailed_analysis: z.string(),
-          score: z.number(),
-          recommendations: z.array(z.string()),
-        }),
+        antiPatterns: baseObj,
+        codeStyle: baseObj,
+        designPatterns: baseObj,
         pull: z.object({
           id: z.number(),
           title: z.string(),
@@ -184,12 +157,6 @@ export default function Page() {
     getPulls();
   }
 
-  const handleRowClick = (id: number) => {
-    setOpenRows(prevState =>
-      prevState.includes(id) ? prevState.filter(rowId => rowId !== id) : [...prevState, id]
-    );
-  };
-
   const renderIdle = () => {
     return (
       <ReportForm onSubmit={createReport} />
@@ -231,27 +198,41 @@ export default function Page() {
   }
 
   const renderSuccess = () => {
-    const gradeBGColor = (value: number): string => {
+    const getTotalScore = (): ReactNode => {
+      const value = reviewResult?.totalScore!;
       if (between(value, 9, 10)) {
-        return 'primary';
+        return <Badge bg='primary'>{value}</Badge>
       }
       if (between(value, 5, 9)) {
-        return 'warning';
+        return <Badge bg='warning'>{value}</Badge>
       }
       if (between(value, 3, 5)) {
-        return 'danger';
+        return <Badge bg='danger'>{value}</Badge>
       }
-      return 'secondary';
+      return <Badge bg='secondary'>{value}</Badge>
     };
 
-    const gradeUserColor = (value: string): string => {
-      if (value == 'senior' || value == 'senior+') {
-        return 'success';
+    const gradeUserGrade = (): ReactNode => {
+      const value = reviewResult?.totalScore!;
+      if (between(value, 10, 12)) {
+        return <Badge bg='primary'>Senior+</Badge>
       }
-      if (value == 'middle' || value == 'middle+') {
-        return 'warning';
+      if (between(value, 9, 10)) {
+        return <Badge bg='primary'>Senior</Badge>
       }
-      return 'secondary';
+      if (between(value, 8, 9)) {
+        return <Badge bg='warning'>Middle+</Badge>
+      }
+      if (between(value, 6, 8)) {
+        return <Badge bg='warning'>Middle</Badge>
+      }
+      if (between(value, 5, 6)) {
+        return <Badge bg='secondary'>Junior+</Badge>
+      }
+      if (between(value, 2, 5)) {
+        return <Badge bg='secondary'>Junior</Badge>
+      }
+      return <Badge bg='secondary'>Low level</Badge>
     };
 
     const gradeComplexity = (value: string): ReactNode => {
@@ -282,13 +263,13 @@ export default function Page() {
         <Row>
           <Col className="mt-5">
             <h1>Отчет об оценке качества кода</h1>
-            <h5>Общая оценка качества кода(по десятибальной шкале): <Badge bg={gradeBGColor(8)}>8</Badge></h5>
+            <h5>Общая оценка качества кода(по десятибальной шкале): {getTotalScore()}</h5>
             <Row>
-              <Col xs={10}>
+              {/* <Col xs={10}>
                 <h5>
-                  Общая оценка уровня: <Badge bg={gradeUserColor('middle')}>middle</Badge>
+                  Общая оценка уровня: {gradeUserGrade()}
                 </h5>
-              </Col>
+              </Col> */}
               <Col className='text-end'>
                 <a href='#' onClick={() => window.print()}>Распечатать</a>
               </Col>
@@ -335,51 +316,22 @@ export default function Page() {
               <tr>
                 <th>#</th>
                 <th className="w-75">Имя PR</th>
-                <th>Оценка</th>
                 <th className='text-end'>Сложность</th>
               </tr>
             </thead>
             <tbody>
               {reviewResult?.pullReviews?.map((p, index) => {
-                const isOpen = openRows.includes(index);
                 return (
                   <React.Fragment key={p?.pull!.id}>
-                    <tr onClick={() => handleRowClick(index)} role="button">
+                    <tr onClick={() => setActiverPR(p)} role="button">
                       <td>#{p?.pull!.id}</td>
                       <td className="w-75">
                         <a href={p?.pull!.html_url} target='_blank'>{p?.pull!.title}</a>
                       </td>
-                      <td><Badge>2</Badge></td>
                       <td className='text-end'>
                         {gradeComplexity(p?.complexity?.classification!)}
                       </td>
                     </tr>
-                    <Collapse in={isOpen}>
-                      <tr>
-                        <td colSpan={4}>
-                          <Markdown>{p?.summary}</Markdown>
-                          <br />
-                          <strong>Стиль кода</strong>
-                          <p>{p?.codeStyle?.summary}</p>
-                          <p>Рекомендации:</p>
-                          <ul>
-                            {p?.codeStyle?.recommendations?.map((e, index) => (<li key={`code_${index}`}>{e}</li>))}
-                          </ul>
-                          <strong>Дизайн паттерны</strong>
-                          <p>{p?.designPatterns?.summary}</p>
-                          <p>Рекомендации:</p>
-                          <ul>
-                            {p?.designPatterns?.recommendations?.map((e, index) => (<li key={index}>{e}</li>))}
-                          </ul>
-                          <strong>Анти паттерны</strong>
-                          <p>{p?.antiPatterns?.summary}</p>
-                          <p>Рекомендации:</p>
-                          <ul>
-                            {p?.antiPatterns?.recommendations?.map((e, index) => (<li key={index}>{e}</li>))}
-                          </ul>
-                        </td>
-                      </tr>
-                    </Collapse>
                   </ React.Fragment>
                 );
               })}
@@ -388,6 +340,53 @@ export default function Page() {
         </Row>
         <br />
         <br />
+        <Modal size='xl' show={activePR != null} onHide={() => setActiverPR(null)}>
+          <Modal.Header closeButton>
+            <Modal.Title>#{activePR?.pull.id} {activePR?.pull.title}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Markdown>{activePR?.summary}</Markdown>
+            <hr />
+            <strong>Стиль кода</strong>
+            <p>{activePR?.codeStyle?.summary}</p>
+            {activePR?.codeStyle?.recommendations.length != 0 && (
+              <>
+                <b>Рекомендации:</b>
+                <ul>
+                  {activePR?.codeStyle?.recommendations?.map((e: any, index: number) => (<li key={`anti_${index}`}>{e}</li>))}
+                </ul>
+              </>
+            )}
+            <hr />
+            <strong>Дизайн паттерны</strong>
+            <p>{activePR?.designPatterns?.summary}</p>
+            {activePR?.designPatterns?.recommendations.length != 0 && (
+              <>
+                <b>Рекомендации:</b>
+                <ul>
+                  {activePR?.designPatterns?.recommendations?.map((e: any, index: number) => (<li key={`anti_${index}`}>{e}</li>))}
+                </ul>
+              </>
+            )}
+            <hr />
+            <strong>Анти паттерны</strong>
+            <p>{activePR?.antiPatterns?.summary}</p>
+            {activePR?.antiPatterns?.recommendations.length != 0 && (
+              <>
+                <b>Рекомендации:</b>
+                <ul>
+                  {activePR?.antiPatterns?.recommendations?.map((e: any, index: number) => (<li key={`anti_${index}`}>{e}</li>))}
+                </ul>
+              </>
+            )}
+
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setActiverPR(null)}>
+              Закрыть
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </>
     );
   };
