@@ -11,6 +11,7 @@ import { IFormState, ReportForm } from './components/form/report_form';
 import React from 'react';
 import { between } from '@/utils/github';
 import { ScorePieChart } from './components/charts/chart';
+import { ReportContent } from './components/report/report';
 
 interface IPullParams {
   url: string;
@@ -300,16 +301,44 @@ export default function Page() {
         </Row>
         <Row>
           <Col xs={8}>
-            <Markdown>
-              {/* {reviewResult?.summary!.replace('```markdown\n', '').replace('```', '')} */}
-            </Markdown>
-            <hr />
+            <ReportContent
+              codeStyle={{
+                score: reviewResult?.totalSummaryData?.metricsSummary?.codeStyle?.score!,
+                summary: reviewResult?.totalSummaryData?.metricsSummary?.codeStyle?.summary!,
+                recommendations: reviewResult?.totalSummaryData?.metricsSummary?.codeStyle?.recommendations!,
+                detailed_analysis: reviewResult?.totalSummaryData?.metricsSummary?.codeStyle?.detailed_analysis!,
+                confidence: reviewResult?.totalSummaryData?.metricsSummary?.codeStyle?.confidence!,
+              }}
+              designPatterns={{
+                score: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.score!,
+                summary: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.summary!,
+                recommendations: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.recommendations!,
+                detailed_analysis: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.detailed_analysis!,
+                confidence: reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.confidence!, 
+              }}
+              antiPatterns={{
+                score: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.score!,
+                summary: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.summary!,
+                recommendations: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.recommendations!,
+                detailed_analysis: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.detailed_analysis!,
+                confidence: reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.confidence!, 
+              }}
+              totalSummary={{
+                overall_assessment: reviewResult?.totalSummary?.overall_assessment!,
+                positives: reviewResult?.totalSummary?.positives!,
+                areas_for_improvement: reviewResult?.totalSummary?.areas_for_improvement!,
+              }}
+            />
           </Col>
           <Col xs={4}>
             <ScorePieChart data={chartData} />
           </Col>
         </Row>
-        <Row className='mt-5 mb-5'>
+        <Row className='mt-5'>
+          <hr />
+          <br />
+          <br />
+          <br />
           <h5>Информация по pull requests</h5>
           <Table hover size="sm" className='mt-2'>
             <thead>
