@@ -33,7 +33,8 @@ const openrouter = createOpenRouter({
   apiKey:
     "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", // Vanya
 });
-const model = openrouter.chat("google/gemini-2.5-pro-preview-03-25");
+// const model = openrouter.chat("google/gemini-2.5-pro-preview-03-25");
+const model = openrouter.chat("openai/gpt-4.1");
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const [
