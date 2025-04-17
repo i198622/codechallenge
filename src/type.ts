@@ -13,10 +13,18 @@ export interface IBaseReview {
   score: number;
   summary: string;
 }
+
+export interface IComplexity {
+  classification: string;
+  justification: string;
+}
 export interface IReview {
   pull: IPull;
   codeStyle: IBaseReview;
   antiPatterns: IBaseReview;
+  summary: string;
+  complexity: IComplexity;
+  designPatterns: IBaseReview,
 }
 
 export interface IReviewResult {

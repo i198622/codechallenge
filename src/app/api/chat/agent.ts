@@ -1,4 +1,5 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import omit from 'lodash/omit';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateText, generateObject } from 'ai';
 import { createOllama } from 'ollama-ai-provider';
@@ -6,6 +7,7 @@ import { z } from 'zod';
 import { IPull, IReview, IReviewResult } from '@/type';
 import { AgentPrompts } from '@/prompts/prompts';
 import { Log } from '@/utils/log';
+import { aggregateMetric } from '@/utils/calc';
 
 // const ollama = createOllama({
 //   baseURL: "http://10.50.31.20:11434/api/",
@@ -151,23 +153,94 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
 }
 
 export async function parallelCodeReview(pulls: IPull[]): Promise<IReviewResult> {
-  const pullReviews = [];
+  const pullReviews = await Promise.all(pulls.map((e) => processCodeReview(e)));
 
-  for (let pull of pulls) {
-    const result = await processCodeReview(pull);
-    pullReviews.push(result);
-  }
-
-  const { text: summary } = await generateText({
+  // METRIC SUMMARY
+  const metricData = pullReviews.map((e) => {
+    return {
+      summary: e.summary,
+      antiPatterns: omit(e.antiPatterns, ['score']),
+      complexity: e.complexity,
+      designPatterns: omit(e.designPatterns, ['score']),
+      codeStyle: omit(e.codeStyle, ['score', ''])
+    };
+  });
+  const metricSummary = await generateObject({
     temperature: 0,
     model,
-    system: AgentPrompts.employeeRreport.system,
-    prompt: AgentPrompts.employeeRreport.prompt.replace('${DATA}', JSON.stringify(pullReviews)),
+    system: AgentPrompts.employeeRreport.systemMetricsSummary,
+    schema: z.object({
+      metricsSummary: z.object({
+        complexity: z.object({
+          classification: z.string(),
+          justification: z.string(),
+        }),
+        antiPatterns: z.object({
+          confidence: z.enum(['Low', 'Medium', 'High']),
+          detailed_analysis: z.string(),
+          summary: z.string(),
+          recommendations: z.array(z.string()),
+        }),
+        codeStyle: z.object({
+          confidence: z.enum(['Low', 'Medium', 'High']),
+          detailed_analysis: z.string(),
+          summary: z.string(),
+          recommendations: z.array(z.string()),
+        }),
+        designPatterns: z.object({
+          confidence: z.enum(['Low', 'Medium', 'High']),
+          detailed_analysis: z.string(),
+          summary: z.string(),
+          recommendations: z.array(z.string()),
+        })
+      }),
+      totalSummary: z.string(),
+    }),
+    prompt: `${AgentPrompts.employeeRreport.promptMetricsSummary.replace('${METRIC_SUMMARY}', JSON.stringify(metricData))}`,
   });
 
-  const result = { pullReviews , summary};
+  // TOTAL SUMMARY
+  const totalSummaryData: any = {
+    ...metricSummary.object,
+  };
+  const aggrAntiPatterns = aggregateMetric(pullReviews, 'antiPatterns');
+  const aggrCodeStyle = aggregateMetric(pullReviews, 'codeStyle');
+  const aggrDesignPatterns = aggregateMetric(pullReviews, 'designPatterns');
+  aggrAntiPatterns.details[0].score;
+
+  totalSummaryData.metricsSummary.antiPatterns['score'] = aggrAntiPatterns.aggregatedScore;
+  totalSummaryData.metricsSummary.designPatterns['score'] = aggrDesignPatterns.aggregatedScore;
+  totalSummaryData.metricsSummary.codeStyle['score'] = aggrCodeStyle.aggregatedScore;
+  const totalScore = (aggrAntiPatterns.aggregatedScore + aggrDesignPatterns.aggregatedScore + aggrCodeStyle.aggregatedScore) / 3;
+  const totalSummary = await generateObject({
+    temperature: 0,
+    system: AgentPrompts.employeeRreport.systemTotalSummary,
+    model,
+    schema: z.object({
+      overall_assessment: z.string(),
+      positives: z.array(z.string()),
+      areas_for_improvement: z.array(z.string()),
+    }),
+    prompt: `${AgentPrompts.employeeRreport.promptTotalSummary.replace('${JSON_DATA}', JSON.stringify(totalSummaryData))}`,
+  });
+
+  // // SUMMARY TEXT
+  // const { text: summary } = await generateText({
+  //   temperature: 0,
+  //   model,
+  //   system: AgentPrompts.employeeRreport.system,
+  //   prompt: AgentPrompts.employeeRreport.promptReportTemplate
+  //     .replace('${DATA}', JSON.stringify(pullReviews)),
+  // });
+
+  const result = { pullReviews , summary: ''};
   
-  Log(JSON.stringify(result));
+  Log(JSON.stringify({
+    ...result,
+    totalScore,
+    totalSummary,
+    metricSummary,
+  }));
 
   return result;
 }

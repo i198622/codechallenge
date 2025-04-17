@@ -25,6 +25,11 @@ export const AgentPrompts = {
   employeeRreport: {
     system: getFile('/employee_report/system.md'),
     prompt: getFile('/employee_report/assistant.md'),
+    systemMetricsSummary: getFile('/employee_report/system_metric_summary.md'),
+    systemTotalSummary: getFile('/employee_report/system_total_summary.md'),
+    promptMetricsSummary: getFile('/employee_report/assistant_metrics_summary.md'),
+    promptTotalSummary: getFile('/employee_report/assistant_total_summary.md'),
+    promptReportTemplate: getFile('/employee_report/employee_report_template.md'),
   },
   mrReport: {
     system: getFile('/mr_report/system.md'),
