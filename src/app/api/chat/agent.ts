@@ -1,8 +1,6 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import omit from "lodash/omit";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText, generateObject } from "ai";
-import { createOllama } from "ollama-ai-provider";
 import { z } from "zod";
 import { IPull, IReview, IReviewResult } from "@/type";
 import { AgentPrompts } from "@/prompts/prompts";
@@ -34,7 +32,7 @@ const openrouter = createOpenRouter({
     "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", // Vanya
 });
 // const model = openrouter.chat("google/gemini-2.5-pro-preview-03-25");
-const model = openrouter.chat("google/gemini-2.0-flash-lite-001");
+const model = openrouter.chat("google/gemini-2.5-flash-preview");
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const [
@@ -162,13 +160,20 @@ async function processCodeReview(pullRequest: IPull): Promise<IReview> {
 export async function parallelCodeReview(
   pulls: IPull[]
 ): Promise<IReviewResult> {
-  // const pullReviews = await Promise.all(pulls.map((e) => processCodeReview(e)));
-  const pullReviews = [];
+  const pullReviewsPromise = await Promise.allSettled(pulls.map((e) => processCodeReview(e)));
+  const pullReviews = pullReviewsPromise
+    .filter((e) => e.status === 'fulfilled')
+    .map((e) => e.value);
 
-  for (let pull of pulls) {
-    const result = await processCodeReview(pull);
-    pullReviews.push(result);
-  }
+  // const pullReviews = [];
+  // for (let pull of pulls) {
+  //   try {
+  //     const result = await processCodeReview(pull);
+  //     pullReviews.push(result);
+  //   } catch(e) {
+  //     // do nothing
+  //   }
+  // }
 
   // METRIC SUMMARY
   const metricData = pullReviews.map((e) => {
@@ -182,8 +187,8 @@ export async function parallelCodeReview(
   });
 
   const metricSummary = await generateObject({
-    temperature: 0,
     model,
+    temperature: 0,
     system: AgentPrompts.employeeRreport.systemMetricsSummary,
     schema: z.object({
       metricsSummary: z.object({

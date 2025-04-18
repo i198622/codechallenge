@@ -30,3 +30,5 @@ export const getDiff = async (url: string) => {
 }
 
 export const between = (x: number, min: number, max: number): boolean => x >= min && x <= max;
+
+export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
