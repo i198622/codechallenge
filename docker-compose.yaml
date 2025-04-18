@@ -4,6 +4,8 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       # - ./src:/app/src
       - ./public:/app/public
