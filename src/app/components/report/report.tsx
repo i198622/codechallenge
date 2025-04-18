@@ -33,6 +33,21 @@ export function ReportContent({ codeStyle, designPatterns, antiPatterns, totalSu
   return (
     <div>
       <br />
+      <h3>Сводка по сотруднику</h3>
+      <br />
+      <p>{totalSummary.overall_assessment}</p>
+      
+      <b>Положительные моменты:</b>
+      <ul className="list-unstyled">
+        {totalSummary.positives.map((e, index) => (<li key={`total_${index}`}> - {e}</li>))}
+      </ul> 
+      <b>Области для улучшения:</b>
+      <ul className="list-unstyled">
+        {totalSummary.areas_for_improvement.map((e, index) => (<li key={`total_${index}`}> - {e}</li>))}
+      </ul>
+      <br />
+      <hr />
+      <br />
       <h3>Общий отчет по Merge Requests</h3>
       <br />
       <h4><b>🕺️ Code Style</b></h4>
@@ -142,20 +157,6 @@ export function ReportContent({ codeStyle, designPatterns, antiPatterns, totalSu
         )}
       </dl>
 
-      <hr />
-      <br />
-      <h4><b>Общий итоговый вывод</b></h4>
-      <p>{totalSummary.overall_assessment}</p>
-      
-      <b>Положительные моменты:</b>
-      <ul className="list-unstyled">
-        {totalSummary.positives.map((e, index) => (<li key={`total_${index}`}> - {e}</li>))}
-      </ul> 
-
-      <b>Области для улучшения:</b>
-      <ul className="list-unstyled">
-        {totalSummary.areas_for_improvement.map((e, index) => (<li key={`total_${index}`}> - {e}</li>))}
-      </ul> 
     </div>
   );
 }
