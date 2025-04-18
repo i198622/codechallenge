@@ -24,3 +24,15 @@ export function ScorePieChart({ data, options }: IProps) {
     />
   );
 }
+
+export function BarChart({ data, options }: IProps) {
+  return (
+    <Chart
+      chartType="ColumnChart"
+      width="100%"
+      height="400px"
+      data={data}
+      options={options}
+    />
+  );
+}

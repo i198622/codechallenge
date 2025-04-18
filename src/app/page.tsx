@@ -10,7 +10,7 @@ import { IPull } from '@/type';
 import { IFormState, ReportForm } from './components/form/report_form';
 import React from 'react';
 import { between } from '@/utils/github';
-import { ScorePieChart } from './components/charts/chart';
+import { BarChart, ScorePieChart } from './components/charts/chart';
 import { ReportContent } from './components/report/report';
 
 interface IPullParams {
@@ -325,7 +325,7 @@ export default function Page() {
             />
           </Col>
           <Col xs={4}>
-            <ScorePieChart
+            {/* <ScorePieChart
               data={chartData}
               options={{
                 legend: "none",
@@ -336,6 +336,21 @@ export default function Page() {
                   0: { color: '#dc3545' },
                   1: { color: '#ffc107' },
                   2: { color: '#28a745' }
+                }
+              }}
+            /> */}
+            <BarChart
+              data={[
+                ["Element", "", { role: "style" }],
+                ["Code Style", reviewResult?.totalSummaryData?.metricsSummary?.codeStyle?.score, "#dc3545"],
+                ["Design Patterns", reviewResult?.totalSummaryData?.metricsSummary?.designPatterns?.score, "#ffc107"],
+                ["Anti Patterns", reviewResult?.totalSummaryData?.metricsSummary?.antiPatterns?.score, "#28a745"],
+              ]}
+              options={{
+                legend: { position: "none" },
+                vAxis: {
+                  maxValue: 10,
+                  minValue: 0,
                 }
               }}
             />
