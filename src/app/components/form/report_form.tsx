@@ -18,16 +18,8 @@ export function ReportForm({ onSubmit }: IProps) {
     url: 'https://github.com/jina-ai/serve',
     username: 'JoanFM',
     startDate: '2025-04-13',
-    endDate: '2016-06-08',
+    endDate: '2025-04-15',
   });
-
-  // const submit = (event: FormEvent) => {
-  //   event.preventDefault();
-  //   const splitted = formData!.url.split('/').splice(3)
-  //   const href = `/report?owner=${splitted[0]}&repo=${splitted[1]}&username=${formData.username}&startDate=${formData.startDate}&endDate=${formData.endDate}`
-  //   window!.open(window.location.origin + href, '_blank')!.focus();
-  //   return;
-  // }
   
   return (
     <Container fluid className='vh-100'>
