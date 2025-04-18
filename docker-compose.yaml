@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - OPEN_ROUTER_API_KEY=${OPEN_ROUTER_API_KEY}
     volumes:
       # - ./src:/app/src
       - ./public:/app/public

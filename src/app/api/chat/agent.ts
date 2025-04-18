@@ -7,31 +7,9 @@ import { AgentPrompts } from "@/prompts/prompts";
 import { Log } from "@/utils/log";
 import { aggregateMetric } from "@/utils/calc";
 
-// const ollama = createOllama({
-//   baseURL: "http://10.50.31.20:11434/api/",
-// });
-// const ollama = createOllama({
-//   baseURL: "https://neuralhelper.ru/ollama/api/",
-//   headers: {
-//     Authorization: "Basic ZnJwc191c2VyOmVqcmozOHU5Mm5ram5iZitlb2RqXzNuMzlk",
-//   },
-// });
-
-// const model = ollama("qwen2.5-coder:32b");
-
-// const google = createGoogleGenerativeAI({
-//   // custom settings
-//   apiKey: 'AIzaSyDEnOnKwc57D-ksUfv5qkt8a8aEpB18ii0',
-// });
-
-// const model = google('gemini-2.5-pro-exp-03-25');
-
 const openrouter = createOpenRouter({
-  // apiKey: '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',
-  apiKey:
-    "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", // Vanya
+  apiKey: process.env.OPEN_ROUTER_API_KEY,
 });
-// const model = openrouter.chat("google/gemini-2.5-pro-preview-03-25");
 const model = openrouter.chat("google/gemini-2.5-flash-preview");
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
