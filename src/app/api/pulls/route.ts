@@ -11,7 +11,6 @@ export async function POST(request: Request) {
   const { owner, repo, user, start_date, end_date, page = 0 } = body;
 
   const cKey = objectHash({ owner, repo, user, start_date, end_date, page });
-
   if (cache.get(cKey) === undefined) {
     try {
       const result = await getPullRequests({ owner, repo, page: page });

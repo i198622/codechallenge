@@ -124,9 +124,9 @@ export default function Page() {
     console.log(resultCount);
   }, [reviewResult])
 
-  const getPulls = useCallback(async () => {
+  const getPulls = useCallback(async (params: any) => {
     setStatus(Status.LoadingPulls);
-    const result = await axios.post('/api/pulls', formParams);
+    const result = await axios.post('/api/pulls', params);
     setPullRequest(result.data);
     setStatus(Status.LoadingReview);
     if (result.data.length == 0) {
@@ -138,7 +138,7 @@ export default function Page() {
 
   const createReport = (value: IFormState) => {
     const splitted = value!.url.split('/').splice(3);
-    setFormParams({
+    const params  = {
       ...formParams,
       owner: splitted[0],
       repo: splitted[1],
@@ -146,9 +146,9 @@ export default function Page() {
       start_date: value.startDate,
       end_date: value.endDate,
       url: value.url,
-    });
-
-    getPulls();
+    };
+    setFormParams(params);
+    getPulls(params);
   }
 
   const renderIdle = () => {
@@ -234,7 +234,7 @@ export default function Page() {
       const value = v.toLowerCase();
       if (value == 'high') {
         return (
-          <Badge bg={'primary'}>
+          <Badge bg={'danger'}>
             Высокая
           </Badge>
         );
