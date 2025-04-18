@@ -165,16 +165,6 @@ export async function parallelCodeReview(
     .filter((e) => e.status === 'fulfilled')
     .map((e) => e.value);
 
-  // const pullReviews = [];
-  // for (let pull of pulls) {
-  //   try {
-  //     const result = await processCodeReview(pull);
-  //     pullReviews.push(result);
-  //   } catch(e) {
-  //     // do nothing
-  //   }
-  // }
-
   // METRIC SUMMARY
   const metricData = pullReviews.map((e) => {
     return {

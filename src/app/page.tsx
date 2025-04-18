@@ -234,7 +234,7 @@ export default function Page() {
       const value = v.toLowerCase();
       if (value == 'high') {
         return (
-          <Badge bg={'success'}>
+          <Badge bg={'primary'}>
             Высокая
           </Badge>
         );
@@ -247,7 +247,7 @@ export default function Page() {
         );
       }
       return (
-        <Badge bg={'secondary'}>
+        <Badge bg={'success'}>
           Легкая
         </Badge>
       );
@@ -332,6 +332,11 @@ export default function Page() {
                 pieSliceText: "label",
                 title: "Средняя оценка по PR",
                 pieStartAngle: 10,
+                slices: {
+                  0: { color: '#dc3545' },
+                  1: { color: '#ffc107' },
+                  2: { color: '#28a745' }
+                }
               }}
             />
             <ScorePieChart
@@ -341,6 +346,11 @@ export default function Page() {
                 pieSliceText: "label",
                 title: "Средняя сложность",
                 pieStartAngle: 10,
+                slices: {
+                  0: { color: '#dc3545' },
+                  1: { color: '#ffc107' },
+                  2: { color: '#28a745' }
+                }
               }}
             />
           </Col>
