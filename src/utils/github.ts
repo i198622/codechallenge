@@ -2,7 +2,7 @@ import { Octokit } from "@octokit/rest";
 import axios from "axios";
 
 const octokit = new Octokit({
-  auth: "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",
+  auth: "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",
   baseUrl: "https://api.github.com",
 });
 
