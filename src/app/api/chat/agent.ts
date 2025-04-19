@@ -10,7 +10,8 @@ import { aggregateMetric } from "@/utils/calc";
 const openrouter = createOpenRouter({
   apiKey: process.env.OPEN_ROUTER_API_KEY,
 });
-const model = openrouter.chat("google/gemini-2.5-flash-preview");
+// const model = openrouter.chat("google/gemini-2.5-flash-preview");
+const model = openrouter.chat(process.env.OPEN_ROUTER_MODEL!);
 
 async function processCodeReview(pullRequest: IPull): Promise<IReview> {
   const [
