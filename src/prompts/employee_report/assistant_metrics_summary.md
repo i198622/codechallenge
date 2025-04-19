@@ -7,7 +7,7 @@
 **Input JSON:**
 
 ```json
-<<PASTE INPUT pullReviews JSON HERE, each pull review containing multiple metrics>>
+${METRIC_SUMMARY}
 ```
 
 **Instructions:**
