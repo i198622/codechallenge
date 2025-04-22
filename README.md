@@ -1,36 +1,199 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI-Powered Code Review Assistant & Employee Performance Reporter
 
-## Getting Started
+Этот проект представляет собой веб-приложение на Next.js, предназначенное для автоматического анализа качества кода в Pull Request (PR) на GitHub и генерации отчетов об эффективности разработчиков с использованием языковых моделей через OpenRouter.
 
-First, run the development server:
+Приложение позволяет:
+1.  Выбирать репозиторий GitHub, пользователя и временной диапазон.
+2.  Автоматически загружать PR, созданные указанным пользователем в заданный период.
+3.  Анализировать каждый PR с помощью ИИ по нескольким метрикам:
+    *   Стиль кода (Code Style)
+    *   Сложность (Complexity)
+    *   Паттерны проектирования (Design Patterns)
+    *   Анти-паттерны (Anti-Patterns)
+4.  Генерировать сводный отчет по эффективности сотрудника на основе анализа его PR.
+5.  Визуализировать результаты анализа с помощью диаграмм.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Ключевые Возможности
+
+*   **Интеграция с GitHub:** Получение списка Pull Requests и их содержимого (diff).
+*   **Анализ кода с помощью ИИ:** Использование моделей через OpenRouter для оценки различных аспектов качества кода на основе настраиваемых промптов.
+*   **Многоаспектная Оценка:** Оценка PR по стилю кода, сложности, паттернам проектирования и анти-паттернам.
+*   **Агрегированный Отчет:** Создание сводного отчета по разработчику, включающего общую оценку, сильные стороны и области для улучшения.
+*   **Визуализация Данных:** Отображение агрегированных оценок и распределения сложности PR с помощью диаграмм (PieChart, BarChart).
+*   **Веб-интерфейс:** Удобный интерфейс для ввода параметров, отслеживания процесса и просмотра результатов.
+*   **Кэширование:** Кэширование запросов к GitHub API для ускорения повторных запросов.
+*   **Контейнеризация:** Поддержка запуска приложения в Docker-контейнере.
+
+## Технологический Стек
+
+*   **Фреймворк:** Next.js (v15+)
+*   **Язык:** TypeScript
+*   **UI:** React (v19+), React Bootstrap, React Bootstrap Typeahead, React Google Charts
+*   **AI SDK:** Vercel AI SDK (`ai`, `@ai-sdk/react`)
+*   **AI Провайдер:** OpenRouter (`@openrouter/ai-sdk-provider`)
+*   **Взаимодействие с GitHub:** Octokit (`@octokit/rest`), Axios
+*   **Утилиты:** Lodash, Day.js, Zod, object-hash
+*   **Кэширование:** simple-in-memory-cache
+*   **Контейнеризация:** Docker, Docker Compose
+
+## Структура Проекта
+
+```
+├── public/                     # Статические файлы (иконки SVG)
+├── src/
+│   ├── app/                    # Основная логика приложения (Next.js App Router)
+│   │   ├── api/                # Backend API эндпоинты
+│   │   │   ├── chat/           # API для взаимодействия с ИИ (ревью кода, отчеты)
+│   │   │   │   ├── agent.ts    # Логика взаимодействия с AI SDK и OpenRouter
+│   │   │   │   └── route.ts    # Обработчик API запроса /api/chat
+│   │   │   └── pulls/          # API для получения Pull Requests с GitHub
+│   │   │       └── route.ts    # Обработчик API запроса /api/pulls
+│   │   ├── components/         # Переиспользуемые UI компоненты
+│   │   │   ├── charts/         # Компоненты диаграмм (Pie, Bar)
+│   │   │   ├── fields/         # Компоненты полей ввода (поиск пользователя GitHub)
+│   │   │   ├── form/           # Компонент формы для ввода параметров отчета
+│   │   │   └── report/         # Компонент для отображения сгенерированного отчета
+│   │   ├── favicon.ico         # Иконка приложения
+│   │   ├── layout.tsx          # Основной layout приложения
+│   │   └── page.tsx            # Главная страница приложения (UI и логика клиента)
+│   ├── prompts/                # Директория с промптами для ИИ
+│   │   ├── anti_patterns/      # Промпты для анализа анти-паттернов
+│   │   ├── code_style/         # Промпты для анализа стиля кода
+│   │   ├── complexity/         # Промпты для анализа сложности
+│   │   ├── design_patterns/    # Промпты для анализа паттернов проектирования
+│   │   ├── employee_report/    # Промпты для генерации отчета по сотруднику
+│   │   ├── mr_report/          # Промпты для генерации сводки по одному MR
+│   │   └── prompts.ts          # Утилита для загрузки промптов
+│   ├── utils/                  # Вспомогательные утилиты
+│   │   ├── cache.ts            # Логика кэширования
+│   │   ├── calc.ts             # Функции для расчета агрегированных метрик
+│   │   ├── github.ts           # Функции для взаимодействия с GitHub API
+│   │   └── log.ts              # Простая утилита логирования в файл
+│   └── type.ts                 # Определения TypeScript типов
+├── .env.local.example          # Пример файла переменных окружения
+├── docker-compose.yaml         # Конфигурация Docker Compose
+├── Dockerfile                  # Dockerfile для сборки образа
+├── next.config.ts              # Конфигурация Next.js
+├── package.json                # Зависимости и скрипты проекта
+├── README.md                   # Этот файл
+├── tsconfig.json               # Конфигурация TypeScript
+└── yarn.lock                   # Lock-файл Yarn
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Основная Функциональность
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1.  **Ввод Данных:** Пользователь через веб-интерфейс (`src/app/components/form/report_form.tsx`) вводит URL репозитория GitHub, имя пользователя и диапазон дат.
+2.  **Получение Pull Requests:** При отправке формы, frontend (`src/app/page.tsx`) отправляет запрос на `/api/pulls`. Backend (`src/app/api/pulls/route.ts`) использует Octokit (`src/utils/github.ts`) для получения списка PR из указанного репозитория. PR фильтруются по автору и дате создания. Для каждого PR загружается diff. Результаты кэшируются (`src/utils/cache.ts`).
+3.  **Анализ Кода ИИ:** Frontend получает список отфильтрованных PR и отправляет их на эндпоинт `/api/chat`. Backend (`src/app/api/chat/route.ts` и `agent.ts`) для каждого PR параллельно запускает анализ с помощью ИИ (OpenRouter). Используются различные промпты из `src/prompts/` для оценки PR по метрикам:
+    *   Стиль кода
+    *   Сложность
+    *   Паттерны проектирования
+    *   Анти-паттерны
+    ИИ возвращает оценки, детальный анализ и рекомендации по каждой метрике в формате JSON. Также генерируется краткая сводка по каждому PR.
+4.  **Генерация Сводного Отчета:** После анализа всех PR, `agent.ts` агрегирует результаты. Рассчитываются средние взвешенные оценки по метрикам (`src/utils/calc.ts`), учитывая сложность PR и уверенность ИИ. Затем, с использованием промптов из `src/prompts/employee_report/`, ИИ генерирует:
+    *   Сводный анализ по каждой метрике для всех PR.
+    *   Общий отчет по сотруднику, включающий оценку, сильные стороны и области для улучшения.
+5.  **Отображение Результатов:** Frontend (`src/app/page.tsx`) получает полный отчет и отображает его пользователю с помощью компонента `src/app/components/report/report.tsx`. Также отрисовываются диаграммы (`src/app/components/charts/chart.tsx`), визуализирующие средние оценки и распределение сложности PR.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Промпты (Prompts)
 
-## Learn More
+Директория `src/prompts` играет ключевую роль, так как она содержит инструкции для ИИ. Каждый подкаталог соответствует определенному аспекту анализа или типу отчета.
 
-To learn more about Next.js, take a look at the following resources:
+*   **Структура промпта:** Обычно включает:
+    *   `system.md`: Системное сообщение, определяющее роль и общие инструкции для ИИ.
+    *   `assistant.md` / `assistant_*.md`: Основной промпт с детальными инструкциями, описанием метрик, шкалой оценок и форматом вывода.
+    *   `example.json`: Пример ожидаемого JSON-ответа от ИИ.
+*   **Загрузка:** Файл `src/prompts/prompts.ts` загружает содержимое этих файлов для использования в `agent.ts`.
+*   **Язык:** Промпты и ожидаемый текстовый вывод от ИИ (анализ, рекомендации, сводки) настроены на **русский язык**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Начало Работы
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Необходимые Условия
 
-## Deploy on Vercel
+*   Node.js (v20 или выше рекомендуется)
+*   Yarn (или npm/pnpm)
+*   Docker и Docker Compose (для запуска в контейнере)
+*   Git
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Установка
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  **Клонировать репозиторий:**
+    ```bash
+    git clone <url-репозитория>
+    cd <имя-папки-проекта>
+    ```
+
+2.  **Установить зависимости:**
+    ```bash
+    yarn install
+    # или
+    # npm install
+    ```
+
+3.  **Настроить переменные окружения:**
+    Создайте файл `.env.local` в корне проекта (скопируйте из `.env.local.example`, если он есть) и добавьте следующие переменные:
+
+    ```plaintext
+    # Обязательно: Токен GitHub с правами на чтение репозиториев (repo)
+    # Можно сгенерировать здесь: https://github.com/settings/tokens
+    GITHUB_TOKEN=ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+    # Обязательно: API ключ OpenRouter
+    # Получить можно здесь: https://openrouter.ai/keys
+    OPEN_ROUTER_API_KEY=sk-or-v1-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+    # Обязательно: Идентификатор модели OpenRouter для использования
+    # Например: "google/gemini-flash-1.5", "openai/gpt-4o", "anthropic/claude-3.5-sonnet"
+    # Список моделей: https://openrouter.ai/models
+    OPEN_ROUTER_MODEL=google/gemini-flash-1.5
+    ```
+
+    **Важно:**
+    *   `GITHUB_TOKEN` необходим для взаимодействия с GitHub API для получения PR и diff'ов. Убедитесь, что у токена достаточно прав.
+    *   `OPEN_ROUTER_API_KEY` и `OPEN_ROUTER_MODEL` необходимы для работы ИИ-анализа. Зарегистрируйтесь на OpenRouter для получения ключа и выберите подходящую модель.
+
+### Запуск
+
+#### В режиме разработки:
+
+```bash
+yarn dev
+```
+
+Откройте [http://localhost:3000](http://localhost:3000) в вашем браузере.
+
+#### С использованием Docker:
+
+1.  **Собрать образ:**
+    ```bash
+    docker compose build
+    ```
+
+2.  **Запустить контейнер:**
+    ```bash
+    docker compose up -d
+    ```
+
+    Приложение будет доступно по адресу [http://localhost:3000](http://localhost:3000). Убедитесь, что переменные окружения (`GITHUB_TOKEN`, `OPEN_ROUTER_API_KEY`, `OPEN_ROUTER_MODEL`) доступны внутри контейнера (они прописаны в `docker-compose.yaml` для чтения из окружения хоста или `.env` файла).
+
+## API Эндпоинты
+
+*   `POST /api/pulls`: Принимает `{ owner, repo, user, start_date, end_date }`. Возвращает список отфильтрованных PR для указанного пользователя и диапазона дат. Использует кэширование.
+*   `POST /api/chat`: Принимает `{ pulls: IPull[] }`. Запускает ИИ-анализ для каждого PR и возвращает агрегированный отчет в формате JSON.
+
+## Конфигурация
+
+Основная конфигурация приложения осуществляется через переменные окружения (см. раздел "Настроить переменные окружения").
+
+*   `GITHUB_TOKEN`: Аутентификация с GitHub API.
+*   `OPEN_ROUTER_API_KEY`: Ключ для доступа к OpenRouter.
+*   `OPEN_ROUTER_MODEL`: Выбор конкретной ИИ-модели на OpenRouter.
+
+## Возможные Улучшения
+
+*   Поддержка других Git-платформ (GitLab, Bitbucket).
+*   Добавление большего количества метрик для анализа (например, покрытие тестами, безопасность).
+*   Более гибкая настройка весов для метрик при расчете общей оценки.
+*   Улучшение UI/UX, добавление графиков трендов.
+*   Возможность настройки промптов через интерфейс.
+*   Интеграция с CI/CD для автоматического анализа PR при их создании/обновлении.
